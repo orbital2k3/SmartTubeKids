@@ -48,6 +48,11 @@ log.txt
 android.keystore
 android-upd2.keystore
 build.log
+
+# signing secrets - never commit these
+keystore.properties
+*.jks
+*.keystore
 notes.txt
 out.txt
 out1.txt
