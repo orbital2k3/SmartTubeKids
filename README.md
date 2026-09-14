@@ -1,5 +1,36 @@
+# Developer Quickstart (Fork & Build)
+
+### Sync with Upstream
+Fetch upstream changes, merge them, sync submodules, and push to your fork in one step:
+```bash
+git fetch upstream && git merge upstream/master && git submodule update --init --recursive && git push origin master
+```
+
+### Build APK
+```bash
+# Ensure submodules are up-to-date
+git submodule update --init --recursive
+
+# Build Stable Debug APK (recommended)
+./gradlew assembleStstableDebug
+
+# Or build Beta Debug APK
+./gradlew assembleStbetaDebug
+
+# (Optional) Install directly to Android TV / Fire TV via ADB
+./gradlew installStstableDebug
+```
+
+Output APK will be located at:
+```text
+smarttubetv/build/outputs/apk/ststable/debug/SmartTube_ststable_..._universal.apk
+```
+
+---
+
 [<img src="images/badge_fdroid.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/app.smarttube.fdroid/)
 [<img src="images/badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/yuliskov/SmartTube/releases)
+
 
 # Important announcement about the app
 
