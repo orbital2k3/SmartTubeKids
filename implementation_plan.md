@@ -592,5 +592,27 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 - **English only.** The relative text arrives in the app's YouTube language (`LocaleManager.getLanguage()`). For other languages every key is `UNKNOWN`, the row stays in YouTube's order, and nothing crashes. Adding a language means adding a second `Pattern` in `RelativeDateParser` with that language's unit words.
 - **Month/year granularity.** "1 month ago" is ordered as 30 days; YouTube rounds, so two cards both labelled "1 year ago" keep their original relative order.
-- **Per-page ordering on continuation.** A row is sorted per fetched page, not globally, because the row adapter appends by index. In practice Home rows only continue when they have fewer than `MIN_ROW_GROUP_SIZE` cards (`MediaServiceManager.shouldContinueTheGroup`), so this rarely shows.
 - **Sparse rows.** Filtering can shrink or empty a row; an emptied row is skipped. No extra fetching is done.
+
+## Addendum: whole-row sort across continuation pages
+
+The original Task 4 sorted each continuation page independently before appending it, on the
+assumption that Home rows rarely continue. On-device testing showed the opposite: initial
+pages are almost always below `MIN_ROW_GROUP_SIZE`, so nearly every row continues at least
+once, and the two independently-sorted pages appeared as two sorted chunks stacked back to
+back (e.g. "3 months, 4 months, 3 years, 14 minutes, 15 minutes ago") rather than one sorted
+row. This looked like the sort wasn't working at all, though `RelativeDateParser` and
+`HomeRecencySorter`'s minute-based conversion were correct throughout (covered by their unit
+tests) — the bug was structural, not in the comparison logic.
+
+Fix: a new `VideoGroup.ACTION_RESORT` (`common/.../data/VideoGroup.java`) tells the row
+adapter to redraw the whole row in place from an already-fully-ordered list, instead of only
+inserting the newly appended tail (`ACTION_APPEND`'s behavior). `BrowsePresenter.continueGroup`
+now merges the continuation page into the row's cumulative list first (as before), then calls
+`HomeRecencySorter.apply` on that *whole* cumulative list, then sets `ACTION_RESORT` before
+calling `getView().updateSection(...)`. Two `smarttubetv` (app module, not a submodule) files
+implement the new action: `VideoGroupObjectAdapter.resort(VideoGroup)` replaces its internal
+video list wholesale and calls `notifyItemRangeChanged`, and `MultipleRowsFragment.update()`
+dispatches `ACTION_RESORT` to it, mirroring the existing `ACTION_SYNC` branch right above it.
+This repeats on every continuation page, so a row that continues multiple times ends up fully
+sorted after each page, not just internally consistent within the newest page.
