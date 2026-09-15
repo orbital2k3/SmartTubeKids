@@ -32,6 +32,12 @@ public class VideoGroup {
      * Add at the begin of the existing group
      */
     public static final int ACTION_PREPEND = 5;
+    /**
+     * Redraw an existing row in place from this group's (already fully ordered) video list,
+     * instead of appending only the newly added tail. Used to re-sort a row after a
+     * continuation page merges into it (see HomeRecencySorter).
+     */
+    public static final int ACTION_RESORT = 6;
     private static final String TAG = VideoGroup.class.getSimpleName();
     private int mId;
     private String mTitle;

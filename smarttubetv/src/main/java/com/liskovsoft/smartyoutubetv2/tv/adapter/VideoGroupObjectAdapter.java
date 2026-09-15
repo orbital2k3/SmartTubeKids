@@ -215,6 +215,23 @@ public class VideoGroupObjectAdapter extends ObjectAdapter {
         notifyOtherAdapters(group, TYPE_SYNC);
     }
 
+    /**
+     * Redraw the whole row in place using {@code group}'s (already fully ordered) video list.
+     * Unlike {@link #append}, this replaces the full backing list instead of only inserting a
+     * new tail, so it can reorder items that were already visible (e.g. after a continuation
+     * page is merged and the row is re-sorted by recency).
+     */
+    public void resort(VideoGroup group) {
+        if (group == null || group.getVideos() == null) {
+            return;
+        }
+
+        mVideoItems.clear();
+        mVideoItems.addAll(group.getVideos());
+
+        notifyItemRangeChanged(0, mVideoItems.size());
+    }
+
     public boolean isEmpty() {
         return size() == 0;
     }

@@ -867,20 +867,22 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
                         continueGroup -> {
                             getView().showProgressBar(false);
 
-                            VideoGroup videoGroup;
+                            VideoGroup videoGroup = VideoGroup.from(group, continueGroup);
 
                             if (isHomeSection()) {
-                                // Sort the new page on its own, then append. The adapter only inserts the
-                                // appended tail (VideoGroupObjectAdapter.append), so the already visible
-                                // part of the row must not be reordered.
-                                VideoGroup batch = VideoGroup.from(continueGroup, group.getSection());
-                                HomeRecencySorter.apply(batch);
-                                videoGroup = VideoGroup.from(group, batch);
-                            } else {
-                                videoGroup = VideoGroup.from(group, continueGroup);
+                                // The continuation page is appended to the row's cumulative list above.
+                                // Re-sort that whole cumulative list, not just the new page, otherwise each
+                                // page ends up internally sorted but stacked one after another instead of
+                                // the row being sorted as a whole. ACTION_RESORT tells the adapter to redraw
+                                // the row in place from this fully-ordered list rather than only inserting
+                                // the new tail (which is all a plain ACTION_APPEND would do).
+                                HomeRecencySorter.apply(videoGroup);
+                                videoGroup.setAction(VideoGroup.ACTION_RESORT);
                             }
 
-                            getView().updateSection(videoGroup);
+                            if (!videoGroup.isEmpty()) {
+                                getView().updateSection(videoGroup);
+                            }
                             mBrowseProcessor.process(videoGroup);
 
                             continueGroupIfNeeded(videoGroup, showLoading);

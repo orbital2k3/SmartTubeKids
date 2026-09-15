@@ -241,6 +241,14 @@ public abstract class MultipleRowsFragment extends RowsSupportFragment implement
                 freeze(false);
             }
             return;
+        } else if (action == VideoGroup.ACTION_RESORT) {
+            VideoGroupObjectAdapter adapter = mVideoGroupAdapters.get(group.getId());
+            if (adapter != null) {
+                freeze(true);
+                adapter.resort(group);
+                freeze(false);
+            }
+            return;
         }
 
         if (group.isEmpty()) {
