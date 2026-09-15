@@ -12,6 +12,7 @@ import com.liskovsoft.smartyoutubetv2.common.prefs.BlockedChannelData;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
@@ -425,6 +426,33 @@ public class VideoGroup {
         try {
             // ConcurrentModificationException fix?
             mVideos.remove(video);
+        } catch (UnsupportedOperationException | ConcurrentModificationException e) { // read only collection
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Stable in-place sort. Safe on read-only lists (logs and leaves order unchanged).
+     */
+    public void sort(Comparator<Video> comparator) {
+        if (mVideos == null || comparator == null || mVideos.size() < 2) {
+            return;
+        }
+
+        try {
+            Collections.sort(mVideos, comparator); // Collections.sort is stable
+        } catch (UnsupportedOperationException | ConcurrentModificationException e) { // read only collection
+            e.printStackTrace();
+        }
+    }
+
+    public void removeIf(Helpers.Filter<Video> filter) {
+        if (mVideos == null || filter == null) {
+            return;
+        }
+
+        try {
+            Helpers.removeIf(mVideos, filter);
         } catch (UnsupportedOperationException | ConcurrentModificationException e) { // read only collection
             e.printStackTrace();
         }
