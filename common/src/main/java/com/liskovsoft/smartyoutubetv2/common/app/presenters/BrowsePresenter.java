@@ -38,6 +38,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.interfaces.VideoGrou
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.common.misc.AppDataSourceManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.BrowseProcessorManager;
+import com.liskovsoft.smartyoutubetv2.common.misc.HomeRecencySorter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager.AccountChangeListener;
 import com.liskovsoft.smartyoutubetv2.common.prefs.AccountsData;
@@ -746,6 +747,14 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
                                 VideoGroup videoGroup = VideoGroup.from(mediaGroup, section, groupIndex.incrementAndGet());
 
+                                if (isHomeSection()) {
+                                    HomeRecencySorter.apply(videoGroup);
+                                }
+
+                                if (videoGroup.isEmpty()) { // every card was watched
+                                    continue;
+                                }
+
                                 if (TextUtils.isEmpty(videoGroup.getTitle())) {
                                     videoGroup.setTitle(getContext().getString(R.string.suggestions));
                                 }
@@ -858,7 +867,19 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
                         continueGroup -> {
                             getView().showProgressBar(false);
 
-                            VideoGroup videoGroup = VideoGroup.from(group, continueGroup);
+                            VideoGroup videoGroup;
+
+                            if (isHomeSection()) {
+                                // Sort the new page on its own, then append. The adapter only inserts the
+                                // appended tail (VideoGroupObjectAdapter.append), so the already visible
+                                // part of the row must not be reordered.
+                                VideoGroup batch = VideoGroup.from(continueGroup, group.getSection());
+                                HomeRecencySorter.apply(batch);
+                                videoGroup = VideoGroup.from(group, batch);
+                            } else {
+                                videoGroup = VideoGroup.from(group, continueGroup);
+                            }
+
                             getView().updateSection(videoGroup);
                             mBrowseProcessor.process(videoGroup);
 
