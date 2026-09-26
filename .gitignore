@@ -25,6 +25,9 @@ Thumbs.db
 .classpath
 .project
 
+# Claude Code
+.claude/
+
 # Android Studio
 .idea
 *.iml
